@@ -13,10 +13,10 @@ const contactSchema = Schema({
         type: String,
         require: true,        
     },
-    // favorite: {
-    //     type: Boolean,
-    //     require: true,
-    // }
+    favorite: {
+        type: Boolean,
+        default: false,
+    }
 }, { versionKey: false, timestamps: true })
 
 const Contact = model("contact", contactSchema)

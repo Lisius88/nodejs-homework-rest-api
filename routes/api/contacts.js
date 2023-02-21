@@ -8,7 +8,13 @@ const contactSchema = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().required(),
   phone: Joi.string().required(),
-  favorite: Joi.bool().required()
+  favorite: Joi.bool(),
+})
+
+const putSchema = Joi.object({
+  name: Joi.string().required(),
+  email: Joi.string().required(),
+  phone: Joi.string().required(),
 })
 
 const favoriteJoiSchema = Joi.object({
@@ -98,7 +104,7 @@ router.delete('/:contactId', async (req, res, next) => {
 
 router.put('/:contactId', async (req, res, next) => {
   try {
-    const {error} = contactSchema.validate(req.body);
+    const {error} = putSchema.validate(req.body);
   if (error) {
     error.status = 400;
     throw error;
