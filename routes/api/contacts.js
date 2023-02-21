@@ -1,30 +1,28 @@
 const express = require('express')
-
 const router = express.Router()
 
-const contactsOperations = require('../../models/contacts')
 const Joi = require('joi')
+const {Contact} = require("../../model/contact")
 
 const contactSchema = Joi.object({
   name: Joi.string().required(),
   email: Joi.string().required(),
   phone: Joi.string().required(),
+  favorite: Joi.bool().required()
 })
 
-const putSchema = Joi.object({
-  name: Joi.string(),
-  email: Joi.string(),
-  phone: Joi.string(),
+const favoriteJoiSchema = Joi.object({
+  favorite: Joi.bool().required(),
 })
 
 router.get('/', async (req, res, next) => {
   try {
-    const contacts = await contactsOperations.listContacts();
+    const result = await Contact.find({});
   res.json({
     status: "success",
     code: 200,
     data: {
-      result: contacts,
+      result,
     }
   })
   } catch (error) {
@@ -36,7 +34,7 @@ router.get('/', async (req, res, next) => {
 router.get('/:contactId', async (req, res, next) => {
 try {
   const {contactId} = req.params;
-  const contact = await contactsOperations.getContactById(contactId);
+  const contact = await Contact.findById(contactId);
   if (!contact) {
     const error = new Error("Contact with each id not found")
     error.status = 404;
@@ -57,12 +55,12 @@ try {
 
 router.post('/', async (req, res, next) => {
   try {
-  const { error } = contactSchema.validate(req.body);
+      const { error } = contactSchema.validate(req.body);
   if (error) {
     error.status = 400;
     throw error;
   }
-  const addingContact = await contactsOperations.addContact(req.body);
+  const addingContact = await Contact.create(req.body);
     res.status(201).json({
       status: "success",
       code: 201,
@@ -79,7 +77,7 @@ router.delete('/:contactId', async (req, res, next) => {
 
   try {
   const {contactId} = req.params;
-  const deletingContact = await contactsOperations.removeContact(contactId)
+  const deletingContact = await Contact.findByIdAndRemove(contactId)
   if (!deletingContact) {
     const error = new Error("Contact with each id not found")
     error.status = 404;
@@ -100,14 +98,42 @@ router.delete('/:contactId', async (req, res, next) => {
 
 router.put('/:contactId', async (req, res, next) => {
   try {
-    const {error} = putSchema.validate(req.body);
+    const {error} = contactSchema.validate(req.body);
   if (error) {
     error.status = 400;
     throw error;
     
     }
     const { contactId } = req.params;
-  const contact = await contactsOperations.updateContact(contactId, req.body);
+  const contact = await Contact.findByIdAndUpdate(contactId, req.body, {new: true});
+  if (!contact) {
+    const error = new Error("Contact with each id not found")
+    error.status = 404;
+    throw error;
+
+  }
+    res.json({
+    status: "success",
+    code: 200,
+    data: {
+      result: contact,
+    }
+  })
+} catch (error) {
+  next(error)
+}
+})
+
+router.patch('/:contactId/favorite', async (req, res, next) => {
+  try {
+    const { contactId } = req.params;
+    const { favorite } = req.body;
+    const {error} = favoriteJoiSchema.validate({favorite});
+  if (error) {
+    error.status = 400;
+    throw error;
+    }
+  const contact = await Contact.findByIdAndUpdate(contactId, {favorite}, {new: true});
   if (!contact) {
     const error = new Error("Contact with each id not found")
     error.status = 404;
