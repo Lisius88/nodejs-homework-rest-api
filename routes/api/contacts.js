@@ -85,7 +85,7 @@ router.post('/', auth, async (req, res, next) => {
   }
 })
 
-router.delete('/:contactId', async (req, res, next) => {
+router.delete('/:contactId', auth, async (req, res, next) => {
 
   try {
   const {contactId} = req.params;
@@ -108,7 +108,7 @@ router.delete('/:contactId', async (req, res, next) => {
 }
 })
 
-router.put('/:contactId', async (req, res, next) => {
+router.put('/:contactId', auth, async (req, res, next) => {
   try {
     const {error} = putSchema.validate(req.body);
   if (error) {
@@ -136,7 +136,7 @@ router.put('/:contactId', async (req, res, next) => {
 }
 })
 
-router.patch('/:contactId/favorite', async (req, res, next) => {
+router.patch('/:contactId/favorite', auth, async (req, res, next) => {
   try {
     const { contactId } = req.params;
     const { favorite } = req.body;
