@@ -43,10 +43,13 @@ router.get('/', auth, async (req, res, next) => {
 })
 
 router.get('/:contactId', auth,  async (req, res, next) => {
-try {
-  const {contactId} = req.params;
-  const contact = await Contact.findById(contactId);
-  if (!contact) {
+  try {
+    const { contactId } = req.params;
+    const { _id } = req.user;
+    const contact = await Contact.findById(contactId);
+    const ownerId = contact.owner.toString()
+    const userId = _id.toString()
+  if (!contact || ownerId !== userId) {
     const error = new Error("Contact with each id not found")
     error.status = 404;
     throw error;
@@ -88,9 +91,12 @@ router.post('/', auth, async (req, res, next) => {
 router.delete('/:contactId', auth, async (req, res, next) => {
 
   try {
-  const {contactId} = req.params;
-  const deletingContact = await Contact.findByIdAndRemove(contactId)
-  if (!deletingContact) {
+    const { contactId } = req.params;
+    const { _id } = req.user;
+    const deletingContact = await Contact.findByIdAndRemove(contactId)
+    const ownerId = deletingContact.owner.toString()
+    const userId = _id.toString()
+  if (!deletingContact || ownerId !== userId) {
     const error = new Error("Contact with each id not found")
     error.status = 404;
     throw error;
@@ -116,9 +122,12 @@ router.put('/:contactId', auth, async (req, res, next) => {
     throw error;
     
     }
+    const { _id } = req.user;
     const { contactId } = req.params;
-  const contact = await Contact.findByIdAndUpdate(contactId, req.body, {new: true});
-  if (!contact) {
+    const contact = await Contact.findByIdAndUpdate(contactId, req.body, { new: true });
+    const ownerId = contact.owner.toString()
+    const userId = _id.toString()
+  if (!contact || ownerId !== userId) {
     const error = new Error("Contact with each id not found")
     error.status = 404;
     throw error;
@@ -138,6 +147,7 @@ router.put('/:contactId', auth, async (req, res, next) => {
 
 router.patch('/:contactId/favorite', auth, async (req, res, next) => {
   try {
+    const { _id } = req.user;
     const { contactId } = req.params;
     const { favorite } = req.body;
     const {error} = favoriteJoiSchema.validate({favorite});
@@ -145,8 +155,10 @@ router.patch('/:contactId/favorite', auth, async (req, res, next) => {
     error.status = 400;
     throw error;
     }
-  const contact = await Contact.findByIdAndUpdate(contactId, {favorite}, {new: true});
-  if (!contact) {
+    const contact = await Contact.findByIdAndUpdate(contactId, { favorite }, { new: true });
+    const ownerId = contact.owner.toString()
+    const userId = _id.toString()
+  if (!contact || ownerId !== userId) {
     const error = new Error("Contact with each id not found")
     error.status = 404;
     throw error;
