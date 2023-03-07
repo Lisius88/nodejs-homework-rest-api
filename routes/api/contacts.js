@@ -42,14 +42,13 @@ router.get('/', auth, async (req, res, next) => {
   
 })
 
-router.get('/:contactId', auth,  async (req, res, next) => {
+router.get('/:contactId', auth, async(req, res, next) => {
   try {
-    const { contactId } = req.params;
-    const { _id } = req.user;
-    const contact = await Contact.findById(contactId);
-    const ownerId = contact.owner.toString()
-    const userId = _id.toString()
-  if (!contact || ownerId !== userId) {
+   const { contactId } = req.params;
+  const { _id: owner } = req.user;
+    console.log(contactId)
+    const contact = await Contact.findOne({ _id: contactId, owner });
+  if (!contact) {
     const error = new Error("Contact with each id not found")
     error.status = 404;
     throw error;
@@ -88,15 +87,12 @@ router.post('/', auth, async (req, res, next) => {
   }
 })
 
-router.delete('/:contactId', auth, async (req, res, next) => {
+router.delete('/:contactId', async (req, res, next) => {
 
   try {
     const { contactId } = req.params;
-    const { _id } = req.user;
     const deletingContact = await Contact.findByIdAndRemove(contactId)
-    const ownerId = deletingContact.owner.toString()
-    const userId = _id.toString()
-  if (!deletingContact || ownerId !== userId) {
+  if (!deletingContact) {
     const error = new Error("Contact with each id not found")
     error.status = 404;
     throw error;
