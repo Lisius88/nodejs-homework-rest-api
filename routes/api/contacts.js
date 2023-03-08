@@ -91,7 +91,7 @@ router.delete('/:contactId', auth, async (req, res, next) => {
   try {
   const { contactId } = req.params;
   const { _id: owner } = req.user;
-    const deletingContact = await Contact.findByIdAndRemove({
+    const deletingContact = await Contact.findOneAndDelete({
     _id: contactId,
     owner,
   })
