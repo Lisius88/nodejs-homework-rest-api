@@ -87,11 +87,14 @@ router.post('/', auth, async (req, res, next) => {
   }
 })
 
-router.delete('/:contactId', async (req, res, next) => {
-
+router.delete('/:contactId', auth, async (req, res, next) => {
   try {
-    const { contactId } = req.params;
-    const deletingContact = await Contact.findByIdAndRemove(contactId)
+  const { contactId } = req.params;
+  const { _id: owner } = req.user;
+    const deletingContact = await Contact.findByIdAndRemove({
+    _id: contactId,
+    owner,
+  })
   if (!deletingContact) {
     const error = new Error("Contact with each id not found")
     error.status = 404;
