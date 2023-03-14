@@ -7,6 +7,7 @@ const path = require('path')
 const fs = require('fs/promises')
 const { User } = require('../../model/user')
 const Jimp = require("jimp");
+const {NotFound} = require("http-errors")
 
 
 router.get('/current', auth, async (req, res, next) => {
@@ -56,6 +57,23 @@ router.patch('/avatars', auth, upload.single("avatar"), async(req, res) => {
   } catch (error) {
     await fs.unlink(tempUpload)
     throw error;
+  }
+  
+})
+
+router.get("/verify/:verificationToken", auth, async (req, res, next) => {
+  try {
+    const { verificationToken } = req.params;
+    const user = await User.findOne({ verificationToken })
+    if (!user) {
+      throw NotFound()
+    }
+    await User.findByIdAndUpdate(user._id, { verify: true, verificationToken: null })
+    res.json({
+        message: "Verify success",
+    })
+  } catch (error) {
+    next(error)
   }
   
 })

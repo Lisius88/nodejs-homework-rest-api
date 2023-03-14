@@ -4,10 +4,13 @@ const { Conflict, Unauthorized } = require('http-errors')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const gravatar = require('gravatar');
-
 const { User } = require('../../model/user')
 const { SECRET_KEY } = process.env
 const auth = require('../../middlewares/auth')
+const { v4: uuidv4 } = require('uuid');
+const sendEmail = require('../../helpers/sendEmail')
+
+
 
 
 router.post('/signup', async (req, res, next) => {
@@ -17,11 +20,17 @@ router.post('/signup', async (req, res, next) => {
         if (user) {
             throw new Conflict(`User with ${email} already exist`)
       }
+      const verificationToken = uuidv4()
       const avatarURL = gravatar.url(email, { protocol: 'https' });
-      const newUser = new User({ name, email, avatarURL })
+      const newUser = new User({ name, email, avatarURL, verificationToken })
       newUser.setPassword(password)
-      newUser.save()
-
+      await newUser.save()
+      const mail = {
+        to: email,
+        subject: "Confirmation email",
+        html: `<a target="_blank" href="http://localhost:3000/api/users/verify/${verificationToken}">Confirm email</a>`,
+      }
+      await sendEmail(mail)
 
   res.status(201).json({
     status: "success",
@@ -30,6 +39,7 @@ router.post('/signup', async (req, res, next) => {
       name,
       email,
       avatarURL,
+      verificationToken,
     }
   })
   } catch (error) {
@@ -42,8 +52,8 @@ router.post('/login', async (req, res, next) => {
       const { email, password } = req.body;
       const user = await User.findOne({ email });
       const passCompare = bcrypt.compareSync(password, user.password)
-      if (!user || !passCompare) {
-        throw new Unauthorized("Email or password wrong")
+      if (!user || !user.verify || !passCompare) {
+        throw new Unauthorized("Email or verify or password wrong")
       }
       const payload = {
           id: user._id,
